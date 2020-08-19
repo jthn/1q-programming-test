@@ -1,10 +1,18 @@
 package com.oneq
 
 import akka.http.scaladsl.model._
+import akka.http.scaladsl.server.Directives
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.model.StatusCodes.Redirection
+import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
 
-object AllRoutes {
+import spray.json._
+
+trait JsonSupport extends SprayJsonSupport with DefaultJsonProtocol {
+  implicit val userFormat = jsonFormat2(User)
+}
+
+object AllRoutes extends Directives with JsonSupport {
   val health = (get & path("health")) {
     complete(HttpEntity(ContentTypes.`text/plain(UTF-8)`, "OK"))
   }
@@ -27,7 +35,7 @@ object AllRoutes {
     } ~
       (path(IntNumber)) { id =>
         get {
-          complete(s"Received: ${id}")
+          complete(UserService.show(id).toJson)
         }
       }
 
