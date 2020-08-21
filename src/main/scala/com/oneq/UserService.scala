@@ -11,4 +11,6 @@ object UserService {
   def show(id: Int) = {
     User(id = 14, email = "test@example.com")
   }
+
+  def login(email: String, password: String) = {}
 }
