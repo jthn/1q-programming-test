@@ -8,19 +8,13 @@ import scala.concurrent.ExecutionContext.Implicits.global
 object Init {
   val db = Database.forConfig("oneq.database")
 
-  private def createUserTableSQL: DBIO[Int] =
-    sqlu"""create table if not exists users(
-      email varchar,
-      passwordHash varchar,
-      primary key (email)
-    )"""
+  val users = TableQuery[Users]
 
-  def run: Future[Unit] =
-    try {
-      db.run(
-        DBIO.seq(
-          createUserTableSQL
-        )
-      )
-    } finally db.close
+  val setup = DBIO.seq(
+    users.schema.create,
+    users += ("test1@example.com", "123"),
+    users += ("test2@example.com", "456")
+  )
+
+  def run: Future[Unit] = db.run(setup)
 }

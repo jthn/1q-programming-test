@@ -26,6 +26,8 @@ object AllRoutes extends Directives with JsonSupport {
     entity(as[String]) { body =>
       val sessionData = new SessionData(body)
 
+      UserService.login("test1@example.com", "123")
+
       setSession(oneOff, usingHeaders, sessionData) { ctx =>
         ctx.complete("OK")
       }
@@ -48,9 +50,7 @@ object AllRoutes extends Directives with JsonSupport {
 
   val users = (get & pathPrefix("user")) {
     (pathEndOrSingleSlash) {
-      complete(
-        HttpEntity(ContentTypes.`text/plain(UTF-8)`, "All Users [admin only]")
-      )
+      complete(UserService.getAll.toJson)
     } ~
       (path(IntNumber)) { id =>
         get {
