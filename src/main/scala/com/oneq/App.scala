@@ -16,29 +16,29 @@ object App {
     // Akka HTTP still needs a classic ActorSystem to start
     import system.dispatcher
 
+    val db = Database.forConfig("oneq.database")
+    val userRepository: UserRepository = new UserRepository(db)
+
     val futureBinding = Http(system).newServerAt("localhost", 8080).bind(routes)
 
-    Init.run.onComplete {
+    userRepository.prepareDB().onComplete {
       case Success(binding) =>
         system.log.info("initialized db")
 
-        futureBinding.onComplete {
-          case Success(binding) =>
-            val address = binding.localAddress
-            system.log.info("Server online at http://{}:{}/", address.getHostString, address.getPort)
-          case Failure(ex) =>
-            system.log.error("Failed to bind HTTP endpoint, terminating system", ex)
-            system.terminate()
-        }
       case Failure(ex) =>
         println(ex)
         system.log.error("Failed to connect to database, terminating system", ex)
         system.terminate()
     }
-  }
 
-  private def initDB()(implicit system: ActorSystem): Unit = {
-    import com.oneq.user._
+    futureBinding.onComplete {
+      case Success(binding) =>
+        val address = binding.localAddress
+        system.log.info("Server online at http://{}:{}/", address.getHostString, address.getPort)
+      case Failure(ex) =>
+        system.log.error("Failed to bind HTTP endpoint, terminating system", ex)
+        system.terminate()
+    }
   }
 
   def main(args: Array[String]): Unit = {

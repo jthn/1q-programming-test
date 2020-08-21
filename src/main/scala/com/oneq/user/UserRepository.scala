@@ -5,12 +5,8 @@ import slick.jdbc.SQLiteProfile.api._
 import scala.concurrent.{Future, Await}
 import scala.concurrent.ExecutionContext.Implicits.global
 
-object Repo {
-  val db = Database.forConfig("oneq.database")
-
-  val users = TableQuery[Users]
-
-  def getAll = {
+class UserRepository(db: Database) extends UsersTable {
+  def list = {
     val q = DBIO.seq(sql"""
       select * from users
     """.as[(String, String)])
@@ -26,5 +22,15 @@ object Repo {
     db.run(q).map { response =>
       println(response.toString)
     }
+  }
+
+  def prepareDB() = {
+    val setup = DBIO.seq(
+      users.schema.create,
+      users += ("test1@example.com", "123"),
+      users += ("test2@example.com", "456")
+    )
+
+    db.run(setup)
   }
 }

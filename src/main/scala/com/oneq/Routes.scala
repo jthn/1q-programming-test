@@ -12,6 +12,7 @@ import com.softwaremill.session.SessionOptions._
 import com.softwaremill.session._
 
 import com.oneq.session._
+import com.oneq.user._
 
 import spray.json._
 
@@ -22,17 +23,17 @@ trait JsonSupport extends SprayJsonSupport with DefaultJsonProtocol {
 object AllRoutes extends Directives with JsonSupport {
   implicit val manager = new SessionManager[SessionData](SessionConfig.fromConfig())
 
-  val auth = (post & pathPrefix("login")) {
-    entity(as[String]) { body =>
-      val sessionData = new SessionData(body)
+  // val auth = (post & pathPrefix("login")) {
+  //   entity(as[String]) { body =>
+  //     val sessionData = new SessionData(body)
 
-      UserService.login("test1@example.com", "123")
+  //     UserService.login("test1@example.com", "123")
 
-      setSession(oneOff, usingHeaders, sessionData) { ctx =>
-        ctx.complete("OK")
-      }
-    }
-  }
+  //     setSession(oneOff, usingHeaders, sessionData) { ctx =>
+  //       ctx.complete("OK")
+  //     }
+  //   }
+  // }
 
   val health = (get & path("health")) {
     complete(HttpEntity(ContentTypes.`text/plain(UTF-8)`, "OK"))
@@ -48,21 +49,21 @@ object AllRoutes extends Directives with JsonSupport {
     }
   }
 
-  val users = (get & pathPrefix("user")) {
-    (pathEndOrSingleSlash) {
-      complete(UserService.getAll.toJson)
-    } ~
-      (path(IntNumber)) { id =>
-        get {
-          complete(UserService.show(id).toJson)
-        }
-      }
+  // val users = (get & pathPrefix("user")) {
+  //   (pathEndOrSingleSlash) {
+  //     complete(UserService.getAll.toJson)
+  //   } ~
+  //     (path(IntNumber)) { id =>
+  //       get {
+  //         complete("tbd")
+  //       }
+  //     }
 
-  }
+  // }
 
   val root = get { // Default to index page
     redirect("/static/", StatusCodes.TemporaryRedirect)
   }
 
-  def routes = auth ~ health ~ static ~ users ~ root
+  def routes = health ~ static ~ root
 }

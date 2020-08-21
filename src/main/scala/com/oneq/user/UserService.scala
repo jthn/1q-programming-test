@@ -1,4 +1,4 @@
-package com.oneq
+package com.oneq.user
 
 import spray.json._
 import spray.json.DefaultJsonProtocol._
@@ -8,19 +8,13 @@ import scala.concurrent.duration.Duration
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.util.{Success, Failure}
 
-import com.oneq.user._
+import akka.actor.ActorSystem
 
-final case class User(id: Int, email: String)
-
-final case class Users(users: Seq[User])
-
-object UserService {
-  def show(id: Int) = {
-    User(id = 14, email = "test@example.com")
-  }
+class UserService(repo: UserRepository)(implicit system: ActorSystem) {
+  def show(id: Int) = {}
 
   def getAll = {
-    Repo.getAll.onComplete {
+    repo.list.onComplete {
       case Success(value) => {
         println("success")
         println(value.toString)
@@ -33,10 +27,17 @@ object UserService {
   }
 
   def login(email: String, password: String) = {
-    try {
-      Await.result(Repo.byLogin(email, password), Duration.Inf)
-    } catch {
-      case e: NoSuchElementException => println("invalid login")
+    repo.byLogin(email, password).onComplete {
+      case Success(value) => {
+        println("success")
+        println(value.toString)
+      }
+      case Failure(e: NoSuchElementException) => {
+        println("user/pass not found")
+      }
+      case Failure(e) => {
+        println(e.toString)
+      }
     }
   }
 }
