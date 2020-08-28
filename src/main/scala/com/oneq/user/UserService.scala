@@ -5,24 +5,36 @@ import spray.json.DefaultJsonProtocol._
 
 import scala.concurrent.Await
 import scala.concurrent.duration.Duration
-import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.ExecutionContext
 import scala.util.{Success, Failure}
 
 import akka.actor.ActorSystem
 
-class UserService(repo: UserRepository)(implicit system: ActorSystem) {
-  def show(id: Int) = {}
+class UserService(repo: UserRepository)(implicit ec: ExecutionContext) {
+  def show(id: Int) = {
+    repo.show(id).onComplete {
+      case Success(value) => value
+      case Failure(e)     => println(e)
+    }
+  }
 
   def getAll = {
     repo.list.onComplete {
       case Success(value) => {
-        println("success")
-        println(value.toString)
+        println(s"success: ${value}")
       }
       case Failure(error) => {
-        println("fail")
-        println(error.toString)
+        println(s"fail ${error}")
       }
+    }
+  }
+
+  def create(email: String, password: String) = {
+    repo.create(email, password).onComplete {
+      case Success(value) => {
+        println(s"success: ${value}")
+      }
+      case Failure(e) => println(e)
     }
   }
 

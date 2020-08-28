@@ -1,7 +1,10 @@
 package com.oneq
 
 import akka.http.scaladsl.Http
-import akka.http.scaladsl.server._
+import akka.http.scaladsl.server.Route
+
+// provides ~ operator to Route
+import akka.http.scaladsl.server.Directives._
 
 import slick.jdbc.SQLiteProfile.api._
 
@@ -18,16 +21,16 @@ object App {
 
     val db = Database.forConfig("oneq.database")
     val userRepository: UserRepository = new UserRepository(db)
+    val userRoutes = new UserRoutes(userRepository).routes
 
-    val futureBinding = Http(system).newServerAt("localhost", 8080).bind(routes)
+    val futureBinding = Http(system).newServerAt("localhost", 8080).bind(userRoutes ~ routes)
 
     userRepository.prepareDB().onComplete {
       case Success(binding) =>
         system.log.info("initialized db")
 
       case Failure(ex) =>
-        println(ex)
-        system.log.error("Failed to connect to database, terminating system", ex)
+        system.log.error(s"Failed to connect to database, terminating system:\n| ${ex}")
         system.terminate()
     }
 
